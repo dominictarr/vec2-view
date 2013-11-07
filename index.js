@@ -16,6 +16,7 @@ function View () {
   //conversion between model units and screen units.
   //it is up to the user to select a sensible defaut for the zoom settings.
   this.zoom = o()
+  this.zoom(1)
   this.listeners = []
   //the size of the view, from top-left to bottom-right
   //this is set to the size of the canvas (for example)
