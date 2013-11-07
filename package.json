@@ -1,0 +1,23 @@
+{
+  "name": "vec2-view",
+  "description": "",
+  "version": "0.0.0",
+  "homepage": "https://github.com/dominictarr/vec2-view",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dominictarr/vec2-view.git"
+  },
+  "dependencies": {
+    "vec2": "~1.3.1",
+    "observable": "~2.1.2",
+    "vec2-touch": "~1.0.2"
+  },
+  "devDependencies": {
+    "hyperscript": "~1.2.3"
+  },
+  "scripts": {
+    "test": "set -e; for t in test/*.js; do node $t; done"
+  },
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (dominictarr.com)",
+  "license": "MIT"
+}
