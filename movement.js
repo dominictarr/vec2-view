@@ -21,11 +21,10 @@ module.exports = function (view, canvas, opts) {
 
   if(isNumber(rect.width) && isNumber(rect.height))
     view.view.set(rect.width, rect.height)
-  console.log(rect, view.view)
   Touch(canvas, function (t) {
+    t.event.preventDefault()
     var _t = t.clone()
     var diff = _t.clone()
-
     t.change(function () {
       //if you hold the shift key and drag, zoom instead of moving.
       diff.set(_t).subtract(t).multiply(1/view.zoom())
