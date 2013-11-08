@@ -59,10 +59,10 @@ module.exports = function (view, canvas, opts) {
     if('+' === motion || '-' === motion)
       return view.zoom(view.zoom() * (motion === '+' ? 1.25 : 0.8))
 
-    if('right' === motion) v.set(-1,  0)
-    if('left'  === motion) v.set( 1,  0)
-    if('up'    === motion) v.set( 0,  1)
-    if('down'  === motion) v.set( 0, -1)
+    if('right' === motion) v.set(1,  0)
+    if('left'  === motion) v.set(-1,  0)
+    if('up'    === motion) v.set( 0,  -1)
+    if('down'  === motion) v.set( 0, 1)
 
     v.divide(view.zoom()).multiply(20)
     e.preventDefault()
