@@ -1,54 +1,99 @@
 //var touches = require('vec2-touch')
 var o       = require('observable')
 var Vec2    = require('vec2')
+var Rec2    = require('rec2')
 
 var movement = require('./movement')
 
 //Aha, a vector layer just manages tiles...
 //you can change: it's dimensions, size, and zoom.
 
+function isFunction (f) {
+  return 'function' === typeof f
+}
+
 module.exports = View
   
-function View () {
+function View (scale) {
   if(!(this instanceof View)) return new View()
   //absolute center. move this to view another part of the graph
   this.center = new Vec2()
   //conversion between model units and screen units.
   //it is up to the user to select a sensible defaut for the zoom settings.
-  this.zoom = o()
-  this.zoom(1)
+  this._zoom = o()
+  this._zoom(1)
+  this.zoom = new Vec2().set(1, 1)
+
+  this.scale = scale || 1
   this.listeners = []
   //the size of the view, from top-left to bottom-right
   //this is set to the size of the canvas (for example)
+
   var view = this.view = new Vec2()
-  
-  var vc = this._viewCenter = new Vec2()
+  var world = this.world = new Rec2()
+  var worldMax = this.worldMax = this.world.bound
   var self = this
+
   function update () {
-    self._viewCenter.set(self.view.x / 2, self.view.y / 2)
+    var hx = self.view.x / 2, hy = self.view.y / 2
+    var ix = 1/self.zoom.x, iy = 1/self.zoom.y
+
+    self.world.set(
+      self.center.x - hx*ix,
+      self.center.y - hy*iy
+    )
+
+    self.worldMax.set(
+      self.world.x + self.view.x * ix,
+      self.world.y + self.view.y * iy
+    )
+
     self.listeners.forEach(function (l) { l() })
   }
+
   this.center.change(update)
-  this.zoom(update)
+  this.zoom.change(update)
   this.view.change(update)
 }
 
-var proto = View.prototype
-proto.toModel = function (v, immutable) {
-  //handle scalars also.
-  if('number' === typeof v)
-    return v / this.zoom()
-  return this.view.divide(2, true).subtract(v).multiply(this.zoom())
+function divide (v, u) {
+  v.set(v.x / u.x, v.y / u.y)
+  return v
 }
 
-proto.toView = function (v) {
+var proto = View.prototype
+proto.toModel = function (v, u) {
+  u = u || new Vec2()
+  return u.set((this.screen.x - v.x) * (1/this.zoom.x), (this.screen.y - v.y) * (1/this.zoom.y))
+  return divide(u.set(this.screen, false).subtract(v, false), this.zoom)
+ 
+  return
+  var z = this.zoom() * (this.scale || 1)
+  //handle scalars also.
+  if('number' === typeof v)
+    return v / z
+
+  u = u || new Vec2()
+  return u.set(this.view).divide(2).subtract(v).multiply(z)
+}
+
+proto.toView = function (v, u) {
+//  var z = this._zoom() / (scale || 1)
   //handle scalars also
   if('number' === typeof v)
-    return v * this.zoom()
+    return v * (this.zoom.x + this.zoom.y)/2
+  u = u || new Vec2()
+
+  console.log(JSON.stringify([v, this.center, this.zoom, this.view], null, 2))
+
+  return u.set(
+    (this.center.x - v.x) * this.zoom.x + this.view.x*0.5,
+    (this.center.y - v.y) * this.zoom.y + this.view.y*0.5
+  )
 
   var _v = v
     .subtract(this.center, true)
-    .multiply(this.zoom())
+    .multiply(z)
     .add(this._viewCenter)
   return _v
 }
@@ -66,6 +111,14 @@ proto.ignore = function (listener) {
 }
 
 proto.track = function (canvas, opts) {
-  movement(this, canvas, opts)
+  var self = this
+  if(canvas.center && isFunction(canvas._zoom)) {
+    canvas.change(function () {
+      self.center.set(canvas.center)
+      self._zoom(canvas._zoom() * self.scale)
+      self.view.set(canvas.view)
+    })
+  } else
+    movement(this, canvas, opts)
   return this
 }

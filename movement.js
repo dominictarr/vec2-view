@@ -21,22 +21,25 @@ module.exports = function (view, canvas, opts) {
 
   if(isNumber(rect.width) && isNumber(rect.height))
     view.view.set(rect.width, rect.height)
+
   Touch(canvas, function (t) {
     t.event.preventDefault()
-    var _t = t.clone()
-    var diff = _t.clone()
+    var _t = t.clone(), diff = t.clone()
+
     t.change(function () {
       //if you hold the shift key and drag, zoom instead of moving.
-      diff.set(_t).subtract(t).multiply(1/view.zoom())
 
+      diff.set(
+        (t.x - _t.x) / view.zoom.x,
+        (t.y - _t.y) / view.zoom.y
+      )
+      var z = _t.y - t.y
+      _t.set(t)
       if(t.event.shiftKey) {
-        var z = _t.y - t.y
-        view.zoom(view.zoom() * (100 + z) / 100)
+        view.zoom.set(view.zoom.x * ((100 + z) / 100), view.zoom.y * ((100 + z) / 100))
       } else {
         view.center.add(diff)
       }
-
-      _t.set(t)
     })
   }, {})
 
