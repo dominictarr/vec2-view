@@ -14,7 +14,6 @@ var view = new View()
 
 //seting the zoom or the center point moves the view over
 //the underlying coordinates.
-view.zoom(1)
 view.center.set(-150, -150)
 
 //register touch/mouse/key listeners and move automatically
@@ -46,6 +45,18 @@ function update () {
 
   ctx.beginPath()
   ctx.arc(center.x, center.y, view.toView(100), 0, Math.PI*2, true)
+  ctx.stroke()
+
+  ctx.beginPath()
+  ctx.arc(center.x, center.y, view.toView(10), 0, Math.PI*2, true)
+  ctx.stroke()
+
+  ctx.beginPath()
+  ctx.arc(center.x, center.y, view.toView(1), 0, Math.PI*2, true)
+  ctx.stroke()
+
+  ctx.beginPath()
+  ctx.arc(center.x, center.y, view.toView(0.1), 0, Math.PI*2, true)
   ctx.stroke()
 }
 
