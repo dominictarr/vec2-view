@@ -59,15 +59,15 @@ module.exports = function (view, canvas, opts) {
 
     var v = new Vec2()
 
-    if('+' === motion || '-' === motion)
-      return view.zoom(view.zoom() * (motion === '+' ? 1.25 : 0.8))
+    var m = '+' === motion ? 1.25 : '-' === motion ? 0.8 : 0
+    if(m)
+      return view.zoom.set(view.zoom.x * m, view.zoom.y * m)
 
     if('right' === motion) v.set(1,  0)
     if('left'  === motion) v.set(-1,  0)
     if('up'    === motion) v.set( 0,  -1)
     if('down'  === motion) v.set( 0, 1)
 
-    v.divide(view.zoom()).multiply(20)
     e.preventDefault()
     view.center.add(v)
   })
