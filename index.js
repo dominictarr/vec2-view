@@ -15,13 +15,11 @@ function isFunction (f) {
 module.exports = View
   
 function View (scale) {
-  if(!(this instanceof View)) return new View()
+  if(!(this instanceof View)) return new View(scale)
   //absolute center. move this to view another part of the graph
   this.center = new Vec2()
   //conversion between model units and screen units.
   //it is up to the user to select a sensible defaut for the zoom settings.
-  this._zoom = o()
-  this._zoom(1)
   this.zoom = new Vec2().set(1, 1)
 
   this.scale = scale || 1
@@ -65,37 +63,18 @@ var proto = View.prototype
 proto.toModel = function (v, u) {
   u = u || new Vec2()
   return u.set((this.screen.x - v.x) * (1/this.zoom.x), (this.screen.y - v.y) * (1/this.zoom.y))
-  return divide(u.set(this.screen, false).subtract(v, false), this.zoom)
- 
-  return
-  var z = this.zoom() * (this.scale || 1)
-  //handle scalars also.
-  if('number' === typeof v)
-    return v / z
-
-  u = u || new Vec2()
-  return u.set(this.view).divide(2).subtract(v).multiply(z)
 }
 
 proto.toView = function (v, u) {
-//  var z = this._zoom() / (scale || 1)
   //handle scalars also
   if('number' === typeof v)
     return v * (this.zoom.x + this.zoom.y)/2
   u = u || new Vec2()
 
-  console.log(JSON.stringify([v, this.center, this.zoom, this.view], null, 2))
-
   return u.set(
     (this.center.x - v.x) * this.zoom.x + this.view.x*0.5,
     (this.center.y - v.y) * this.zoom.y + this.view.y*0.5
   )
-
-  var _v = v
-    .subtract(this.center, true)
-    .multiply(z)
-    .add(this._viewCenter)
-  return _v
 }
 
 proto.change = function (listener) {
