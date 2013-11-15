@@ -22,10 +22,15 @@ module.exports = function (view, canvas, opts) {
 //  if(isNumber(rect.width) && isNumber(rect.height))
 //    view.view.set(rect.width, rect.height)
 
+// if there are two touches,
+// take vertical distance between them,
+// remember that,
+// next move, take the change in distance, and change zoom by the same amount...
+
   Touch(canvas, function (t) {
     t.event.preventDefault()
     var _t = t.clone(), diff = t.clone()
-
+    console.log('ID', t.id, t.force)
     t.change(function () {
       //if you hold the shift key and drag, zoom instead of moving.
 
@@ -35,7 +40,7 @@ module.exports = function (view, canvas, opts) {
       )
       var z = _t.y - t.y
       _t.set(t)
-      if(t.event.shiftKey) {
+      if(t.event.shiftKey || t.force > 0.5) {
         view.zoom.set(view.zoom.x * ((100 + z) / 100), view.zoom.y * ((100 + z) / 100))
       } else {
         view.center.add(diff)
