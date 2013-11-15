@@ -72,8 +72,8 @@ proto.toView = function (v, u) {
   u = u || new Vec2()
 
   return u.set(
-    (this.center.x - v.x) * this.zoom.x + this.view.x*0.5,
-    (this.center.y - v.y) * this.zoom.y + this.view.y*0.5
+    (v.x - this.center.x) * this.zoom.x + this.view.x*0.5,
+    (v.y - this.center.y) * this.zoom.y + this.view.y*0.5
   )
 }
 
