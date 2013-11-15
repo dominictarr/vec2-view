@@ -30,8 +30,8 @@ module.exports = function (view, canvas, opts) {
       //if you hold the shift key and drag, zoom instead of moving.
 
       diff.set(
-        (t.x - _t.x) / view.zoom.x,
-        (t.y - _t.y) / view.zoom.y
+        (_t.x - t.x) / view.zoom.x,
+        (_t.y - t.y) / view.zoom.y
       )
       var z = _t.y - t.y
       _t.set(t)
@@ -52,12 +52,11 @@ module.exports = function (view, canvas, opts) {
     '187': '+',
     '189': '-'
   }
+  var v = new Vec2()
 
   window.addEventListener('keydown', function (e) {
     var motion = keys[e.keyCode]
     if(!motion) return
-
-    var v = new Vec2()
 
     var m = '+' === motion ? 1.25 : '-' === motion ? 0.8 : 0
     if(m)
@@ -69,7 +68,10 @@ module.exports = function (view, canvas, opts) {
     if('down'  === motion) v.set( 0, 1)
 
     e.preventDefault()
-    view.center.add(v)
+    view.center.set(
+      view.center.x + ((v.x*20) * 1/view.zoom.x),
+      view.center.y + ((v.y*20) * 1/view.zoom.y)
+    )
   })
 
 }
