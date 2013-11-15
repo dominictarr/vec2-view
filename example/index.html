@@ -12,13 +12,23 @@ var View = require('../')
 var canvas = h('canvas')
 var ctx = canvas.getContext('2d')
 
+var PRE = h('pre', {
+  style: {
+    position: 'fixed',
+    left: '20px',
+    top: '20px',
+    'pointer-events': 'none'
+  }
+})
+
 //create a canvas that is the full size of the window
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
+document.body.appendChild(PRE)
 
 //create a vec2-view instance, and track the canvas
-var view = new View()
+var view = new View({size: new Vec2(1000, 1000)})
 
 //seting the zoom or the center point moves the view over
 //the underlying coordinates.
@@ -32,6 +42,12 @@ update()
 view.change(update)
 
 function update () {
+  PRE.textContent = JSON.stringify([
+    view.world,
+    view.world.bound,
+    view.zoom
+  ])
+
   //draw everything...
   ctx.fillStyle = 'white'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -40,6 +56,23 @@ function update () {
   var v = view.toView(new Vec2(-100, -100))
   var v2 = view.toView(new Vec2(100, 100))
   var center = view.toView(new Vec2(0, 0))
+  PRE.textContent +=
+    '\n' + JSON.stringify(view.center)
+
+  var _center = view.toView(view.center.clone())
+
+  //cross hairs
+
+  ctx.beginPath()
+  ctx.moveTo(_center.x, _center.y - 20)
+  ctx.lineTo(_center.x, _center.y + 20)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(_center.x - 20, _center.y)
+  ctx.lineTo(_center.x + 20, _center.y)
+  ctx.stroke()
+
+  //now draw an object, so the movement is visible.
 
   ctx.beginPath()
   ctx.moveTo(v.x, v.y)
@@ -87,24 +120,21 @@ function isFunction (f) {
 module.exports = View
   
 function View (scale) {
-  if(!(this instanceof View)) return new View()
+  if(!(this instanceof View)) return new View(scale)
   //absolute center. move this to view another part of the graph
   this.center = new Vec2()
   //conversion between model units and screen units.
   //it is up to the user to select a sensible defaut for the zoom settings.
-  this._zoom = o()
-  this._zoom(1)
   this.zoom = new Vec2().set(1, 1)
 
   this.scale = scale || 1
   this.listeners = []
   //the size of the view, from top-left to bottom-right
   //this is set to the size of the canvas (for example)
-  var screen = this.screen = new Rec2()
-  var view = this.view = this.screen.size
+
+  var view = this.view = new Vec2()
   var world = this.world = new Rec2()
   var worldMax = this.worldMax = this.world.bound
-  var vc = this._viewCenter = new Vec2()
   var self = this
 
   function update () {
@@ -122,7 +152,6 @@ function View (scale) {
     )
 
     self.listeners.forEach(function (l) { l() })
-
   }
 
   this.center.change(update)
@@ -139,37 +168,18 @@ var proto = View.prototype
 proto.toModel = function (v, u) {
   u = u || new Vec2()
   return u.set((this.screen.x - v.x) * (1/this.zoom.x), (this.screen.y - v.y) * (1/this.zoom.y))
-  return divide(u.set(this.screen, false).subtract(v, false), this.zoom)
- 
-  return
-  var z = this.zoom() * (this.scale || 1)
-  //handle scalars also.
-  if('number' === typeof v)
-    return v / z
-
-  u = u || new Vec2()
-  return u.set(this.view).divide(2).subtract(v).multiply(z)
 }
 
 proto.toView = function (v, u) {
-//  var z = this._zoom() / (scale || 1)
   //handle scalars also
   if('number' === typeof v)
     return v * (this.zoom.x + this.zoom.y)/2
   u = u || new Vec2()
 
-  console.log(JSON.stringify([v, this.center, this.zoom, this.view], null, 2))
-
   return u.set(
-    (this.center.x - v.x) * this.zoom.x + this.view.x*0.5,
-    (this.center.y - v.y) * this.zoom.y + this.view.y*0.5
+    (v.x - this.center.x) * this.zoom.x + this.view.x*0.5,
+    (v.y - this.center.y) * this.zoom.y + this.view.y*0.5
   )
-
-  var _v = v
-    .subtract(this.center, true)
-    .multiply(z)
-    .add(this._viewCenter)
-  return _v
 }
 
 proto.change = function (listener) {
@@ -228,23 +238,18 @@ module.exports = function (view, canvas, opts) {
 
     t.change(function () {
       //if you hold the shift key and drag, zoom instead of moving.
-      //diff.set(_t).subtract(t).multiply(view.zoom)
 
-        diff.set(
-          (t.x - _t.x) / view.zoom.x,
-          (t.y - _t.y) / view.zoom.y
-        )
-
+      diff.set(
+        (_t.x - t.x) / view.zoom.x,
+        (_t.y - t.y) / view.zoom.y
+      )
+      var z = _t.y - t.y
+      _t.set(t)
       if(t.event.shiftKey) {
-        var z = _t.y - t.y
         view.zoom.set(view.zoom.x * ((100 + z) / 100), view.zoom.y * ((100 + z) / 100))
       } else {
         view.center.add(diff)
       }
-
-      _t.set(t)
-
-
     })
   }, {})
 
@@ -257,24 +262,26 @@ module.exports = function (view, canvas, opts) {
     '187': '+',
     '189': '-'
   }
+  var v = new Vec2()
 
   window.addEventListener('keydown', function (e) {
     var motion = keys[e.keyCode]
     if(!motion) return
 
-    var v = new Vec2()
-
-    if('+' === motion || '-' === motion)
-      return view.zoom(view.zoom() * (motion === '+' ? 1.25 : 0.8))
+    var m = '+' === motion ? 1.25 : '-' === motion ? 0.8 : 0
+    if(m)
+      return view.zoom.set(view.zoom.x * m, view.zoom.y * m)
 
     if('right' === motion) v.set(1,  0)
     if('left'  === motion) v.set(-1,  0)
     if('up'    === motion) v.set( 0,  -1)
     if('down'  === motion) v.set( 0, 1)
 
-    v.divide(view.zoom()).multiply(20)
     e.preventDefault()
-    view.center.add(v)
+    view.center.set(
+      view.center.x + ((v.x*20) * 1/view.zoom.x),
+      view.center.y + ((v.y*20) * 1/view.zoom.y)
+    )
   })
 
 }
