@@ -19,8 +19,8 @@ module.exports = function (view, canvas, opts) {
     ? canvas.getBoundingClientRect()
     : rect
 
-  if(isNumber(rect.width) && isNumber(rect.height))
-    view.view.set(rect.width, rect.height)
+//  if(isNumber(rect.width) && isNumber(rect.height))
+//    view.view.set(rect.width, rect.height)
 
   Touch(canvas, function (t) {
     t.event.preventDefault()
