@@ -15,7 +15,8 @@
     "hyperscript": "~1.2.3"
   },
   "scripts": {
-    "test": "set -e; for t in test/*.js; do node $t; done"
+    "test": "set -e; for t in test/*.js; do node $t; done",
+    "build": "browserify example/index.js | indexhtmlify > example/index.html"
   },
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (dominictarr.com)",
   "license": "MIT"
