@@ -1,5 +1,3 @@
-//var touches = require('vec2-touch')
-var o       = require('observable')
 var Vec2    = require('vec2')
 var Rec2    = require('rec2')
 
